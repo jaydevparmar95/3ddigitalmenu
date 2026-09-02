@@ -151,17 +151,6 @@ export function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
           </button>
         </form>
 
-        {/* Quick Credentials Info Box */}
-        <div className="p-2 rounded-lg bg-stone-900/60 border border-stone-800 text-[10px] text-stone-400 space-y-0.5">
-          <div className="flex items-center gap-1 text-amber-300 font-bold">
-            <Sparkles className="w-2.5 h-2.5 text-amber-400" />
-            <span>Default Credentials</span>
-          </div>
-          <div className="flex items-center justify-between text-stone-300">
-            <span>Username: <strong className="text-yellow-200">admin</strong></span>
-            <span>Password: <strong className="text-yellow-200">adminpassword123</strong></span>
-          </div>
-        </div>
       </div>
     </div>
   );
