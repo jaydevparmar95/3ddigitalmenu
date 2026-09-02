@@ -62,10 +62,10 @@ export async function ensureDatabaseAndTables(): Promise<void> {
     // Auto-migrate columns if they don't exist
     try {
       await db.query("ALTER TABLE `shops` ADD COLUMN `is_deleted` TINYINT(1) DEFAULT 0;");
-    } catch (_) {}
+    } catch (_) { }
     try {
       await db.query("ALTER TABLE `shops` ADD COLUMN `visitors_count` INT DEFAULT 0;");
-    } catch (_) {}
+    } catch (_) { }
 
     // 2. Categories Table
     await db.query(`
@@ -120,7 +120,7 @@ export async function ensureDatabaseAndTables(): Promise<void> {
     const count = rows[0]?.count || 0;
 
     if (count === 0) {
-      console.log("Seeding default Indian restaurants to MySQL database...");
+      console.log("Seeding default Indian shops to MySQL database...");
       for (const shop of DEFAULT_SHOPS) {
         await insertFullShop(shop);
       }

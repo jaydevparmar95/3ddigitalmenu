@@ -1,11 +1,19 @@
 import { NextResponse } from "next/server";
 import { updateItemInDb, deleteItemInDb } from "@/lib/db";
+import { isRequestAdminAuthenticated } from "@/lib/auth";
 
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ shopId: string; itemId: string }> }
 ) {
   try {
+    if (!isRequestAdminAuthenticated(request)) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized. Admin authentication required." },
+        { status: 401 }
+      );
+    }
+
     const { itemId } = await params;
     const body = await request.json();
 
@@ -25,6 +33,13 @@ export async function DELETE(
   { params }: { params: Promise<{ shopId: string; itemId: string }> }
 ) {
   try {
+    if (!isRequestAdminAuthenticated(request)) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized. Admin authentication required." },
+        { status: 401 }
+      );
+    }
+
     const { itemId } = await params;
     await deleteItemInDb(itemId);
 

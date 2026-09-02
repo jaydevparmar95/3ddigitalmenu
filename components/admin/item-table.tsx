@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import Image from "next/image";
 import { ShopMenuItem } from "@/types/shop";
 import { useShop } from "@/context/shop-context";
 import { formatCurrency } from "@/lib/utils";
@@ -199,12 +198,14 @@ export function ItemTable({ onAddNew, onEdit, shopId }: ItemTableProps) {
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-3">
                       <div className="relative w-12 h-12 rounded-lg overflow-hidden shrink-0 bg-[#0d0705] border border-orange-500/40 shadow-sm">
-                        <Image
-                          src={item.image}
+                        <img
+                          src={item.image || "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=200&q=80"}
                           alt={item.name}
-                          fill
-                          className="object-cover"
-                          sizes="48px"
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src =
+                              "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=200&q=80";
+                          }}
                         />
                       </div>
                       <div className="space-y-0.5">

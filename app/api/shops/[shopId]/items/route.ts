@@ -1,11 +1,19 @@
 import { NextResponse } from "next/server";
 import { addItemInDb } from "@/lib/db";
+import { isRequestAdminAuthenticated } from "@/lib/auth";
 
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ shopId: string }> }
 ) {
   try {
+    if (!isRequestAdminAuthenticated(request)) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized. Admin authentication required." },
+        { status: 401 }
+      );
+    }
+
     const { shopId } = await params;
     const body = await request.json();
 

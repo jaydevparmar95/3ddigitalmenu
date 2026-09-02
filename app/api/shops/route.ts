@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAllShopsFromDb, createShopInDb } from "@/lib/db";
+import { isRequestAdminAuthenticated } from "@/lib/auth";
 
 export async function GET() {
   try {
@@ -16,6 +17,13 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    if (!isRequestAdminAuthenticated(request)) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized. Admin authentication required." },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     if (!body.name) {
       return NextResponse.json(

@@ -8,24 +8,29 @@ export async function POST(
   try {
     const { shopId } = await params;
     
-    // Parse client body for visitorId / fingerprint
+    // 1. Parse client body for visitorId
     let clientVisitorId = "";
     try {
       const body = await request.json();
       clientVisitorId = body?.visitorId || "";
     } catch {
-      // ignore JSON parse error if empty
+      // ignore JSON parse error
     }
 
-    // IP & User-Agent for server-side deduplication
+    // 2. Check for cookie fallback (helpful for mobile Safari private & in-app webviews)
+    if (!clientVisitorId) {
+      clientVisitorId = request.cookies.get("digital_menu_vid")?.value || "";
+    }
+
+    // 3. IP & User-Agent for server-side deduplication
     const forwardedFor = request.headers.get("x-forwarded-for");
     const ipAddress = (forwardedFor ? forwardedFor.split(",")[0] : "127.0.0.1").trim();
-    const userAgent = request.headers.get("user-agent") || "unknown-browser";
+    const userAgent = request.headers.get("user-agent") || "unknown-mobile-browser";
 
-    // Compute composite unique visitor hash
+    // 4. Compute composite unique visitor hash
     const visitorHash = clientVisitorId
       ? clientVisitorId.trim()
-      : `${ipAddress}_${userAgent.substring(0, 100)}`;
+      : `mob_${Buffer.from(`${ipAddress}_${userAgent}`).toString("base64").substring(0, 48)}`;
 
     const result = await recordUniqueShopVisitorInDb(
       shopId,
@@ -34,12 +39,23 @@ export async function POST(
       userAgent
     );
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       shopId,
       visitorsCount: result.count,
       isNewVisitor: result.isNewVisitor,
+      visitorId: visitorHash,
     });
+
+    // Set 1-year persistent cookie for mobile browsers
+    response.cookies.set("digital_menu_vid", visitorHash, {
+      path: "/",
+      maxAge: 31536000,
+      sameSite: "lax",
+      httpOnly: false,
+    });
+
+    return response;
   } catch (error: any) {
     console.error("Record unique visitor error:", error);
     return NextResponse.json(

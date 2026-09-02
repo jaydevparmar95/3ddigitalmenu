@@ -54,7 +54,7 @@ export function ItemFormModal({
       setIsVeg(true);
       setIsBestseller(false);
       setIsSpicy(false);
-      const defaults = getAIImageOptions("Delicious Food Dish", "", "starters");
+      const { options: defaults } = getAIImageOptions("Delicious Food Dish", "", "starters");
       setImageUrl(defaults[0]?.url || "");
     }
   }, [editItem, isOpen, shopCategories]);

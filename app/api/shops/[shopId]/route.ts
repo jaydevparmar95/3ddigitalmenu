@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getShopFromDb, updateShopInDb, deleteShopInDb, softDeleteShopInDb, restoreShopInDb } from "@/lib/db";
+import { isRequestAdminAuthenticated } from "@/lib/auth";
 
 export async function GET(
   request: Request,
@@ -31,6 +32,13 @@ export async function PUT(
   { params }: { params: Promise<{ shopId: string }> }
 ) {
   try {
+    if (!isRequestAdminAuthenticated(request)) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized. Admin authentication required." },
+        { status: 401 }
+      );
+    }
+
     const { shopId } = await params;
     const body = await request.json();
 
@@ -56,6 +64,13 @@ export async function DELETE(
   { params }: { params: Promise<{ shopId: string }> }
 ) {
   try {
+    if (!isRequestAdminAuthenticated(request)) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized. Admin authentication required." },
+        { status: 401 }
+      );
+    }
+
     const { shopId } = await params;
     const url = new URL(request.url);
     const isPermanent = url.searchParams.get("permanent") === "true";

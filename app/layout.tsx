@@ -45,7 +45,7 @@ export default function RootLayout({
       <body className="bg-[#03140c] text-[#fef2f2] min-h-screen antialiased selection:bg-emerald-600 selection:text-white">
         <ShopProvider>
           <MenuProvider>
-            <main className="min-h-screen overflow-hidden">{children}</main>
+            <main className="min-h-screen">{children}</main>
           </MenuProvider>
         </ShopProvider>
       </body>

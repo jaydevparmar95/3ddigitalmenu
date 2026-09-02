@@ -74,8 +74,15 @@ export const CoverStartPage = forwardRef<
   return (
     <div
       ref={ref}
-      style={style}
-      data-density="soft"
+      style={{
+        ...style,
+        backfaceVisibility: "hidden",
+        WebkitBackfaceVisibility: "hidden",
+        transformStyle: "preserve-3d",
+        WebkitTransformStyle: "preserve-3d",
+        touchAction: "manipulation",
+      }}
+      data-density="hard"
       className="w-full h-full menu-parchment p-2 sm:p-2.5 flex flex-col select-none relative overflow-hidden rounded-2xl"
     >
       {/* Spine crease shadow on right edge of left page */}
@@ -175,7 +182,14 @@ export const CategoryPage = forwardRef<
   return (
     <div
       ref={ref}
-      style={style}
+      style={{
+        ...style,
+        backfaceVisibility: "hidden",
+        WebkitBackfaceVisibility: "hidden",
+        transformStyle: "preserve-3d",
+        WebkitTransformStyle: "preserve-3d",
+        touchAction: "manipulation",
+      }}
       data-density="soft"
       className="w-full h-full menu-parchment p-2 sm:p-2.5 flex flex-col select-none relative overflow-hidden rounded-2xl"
     >
@@ -282,8 +296,15 @@ export const BackContactPage = forwardRef<
   return (
     <div
       ref={ref}
-      style={style}
-      data-density="soft"
+      style={{
+        ...style,
+        backfaceVisibility: "hidden",
+        WebkitBackfaceVisibility: "hidden",
+        transformStyle: "preserve-3d",
+        WebkitTransformStyle: "preserve-3d",
+        touchAction: "manipulation",
+      }}
+      data-density="hard"
       className="w-full h-full menu-parchment p-2 sm:p-2.5 flex flex-col select-none relative overflow-hidden rounded-2xl"
     >
       <div className="absolute top-0 left-0 bottom-0 w-6 spine-crease-left pointer-events-none z-20" />

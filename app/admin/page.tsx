@@ -9,6 +9,7 @@ import { ItemFormModal } from "@/components/admin/item-form";
 import { QrModal } from "@/components/admin/qr-modal";
 import { RegisterShopModal } from "@/components/admin/register-shop-modal";
 import { EditShopModal } from "@/components/admin/edit-shop-modal";
+import { AdminLogin } from "@/components/admin/admin-login";
 import { Input } from "@/components/ui/input";
 import {
   Store,
@@ -30,6 +31,8 @@ import {
   Eye,
   Archive,
   AlertTriangle,
+  LogOut,
+  Home,
 } from "lucide-react";
 
 export default function AdminPage() {
@@ -45,6 +48,7 @@ export default function AdminPage() {
     isLoaded,
   } = useShop();
 
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [activeTab, setActiveTab] = useState<"shops" | "dishes">("shops");
   const [shopViewMode, setShopViewMode] = useState<"active" | "archived">("active");
   const [shopSearchQuery, setShopSearchQuery] = useState<string>("");
@@ -100,6 +104,28 @@ export default function AdminPage() {
     return filteredShops.slice(start, start + SHOPS_PER_PAGE);
   }, [filteredShops, currentShopPageClamped, SHOPS_PER_PAGE]);
 
+  // Check Admin Authentication on mount
+  useEffect(() => {
+    fetch("/api/auth/check")
+      .then((res) => {
+        if (res.ok) {
+          setIsAuthenticated(true);
+        } else {
+          setIsAuthenticated(false);
+        }
+      })
+      .catch(() => {
+        setIsAuthenticated(false);
+      });
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {}
+    setIsAuthenticated(false);
+  };
+
   const handleOpenQrModal = (shop: Shop) => {
     setQrModalShop(shop);
     setIsQrModalOpen(true);
@@ -139,12 +165,19 @@ export default function AdminPage() {
     setDeleteConfirmShopId(null);
   };
 
-  if (!isLoaded) {
+  if (isAuthenticated === null || !isLoaded) {
     return (
       <div className="min-h-screen bg-[#070302] text-yellow-300 flex items-center justify-center font-serif">
-        <span>Loading Admin Control Center...</span>
+        <div className="text-center space-y-3">
+          <div className="w-10 h-10 border-3 border-amber-400 border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-sm font-sans text-stone-300">Loading Admin Control Center...</p>
+        </div>
       </div>
     );
+  }
+
+  if (isAuthenticated === false) {
+    return <AdminLogin onLoginSuccess={() => setIsAuthenticated(true)} />;
   }
 
   return (
@@ -165,7 +198,16 @@ export default function AdminPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center flex-wrap gap-2.5">
+            {/* View Public Directory Link */}
+            <Link
+              href="/"
+              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-stone-900/90 border border-stone-800 hover:border-amber-400/50 text-stone-300 hover:text-white font-bold text-xs transition-colors"
+            >
+              <Home className="w-3.5 h-3.5 text-amber-400" />
+              <span>Public Directory</span>
+            </Link>
+
             {/* Register Shop Button (Admin Only) */}
             <button
               type="button"
@@ -174,6 +216,17 @@ export default function AdminPage() {
             >
               <Plus className="w-4 h-4 stroke-[3]" />
               <span>Register New Shop</span>
+            </button>
+
+            {/* Logout Button */}
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-red-950/40 border border-red-500/30 hover:bg-red-900/50 text-red-300 text-xs font-bold transition-colors cursor-pointer"
+              title="Sign out of Admin Portal"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Sign Out</span>
             </button>
           </div>
         </div>
