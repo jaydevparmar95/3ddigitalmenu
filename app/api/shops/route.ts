@@ -5,7 +5,10 @@ import { isRequestAdminAuthenticated } from "@/lib/auth";
 export async function GET() {
   try {
     const shops = await getAllShopsFromDb();
-    return NextResponse.json({ success: true, shops });
+    const res = NextResponse.json({ success: true, shops });
+    // Cache at edge/CDN for 30s, serve stale for up to 60s while revalidating
+    res.headers.set("Cache-Control", "public, s-maxage=30, stale-while-revalidate=60");
+    return res;
   } catch (error: any) {
     console.error("GET /api/shops error:", error);
     return NextResponse.json(

@@ -30,11 +30,18 @@ interface ShopContextType {
 const ShopContext = createContext<ShopContextType | undefined>(undefined);
 
 export function ShopProvider({ children }: { children: React.ReactNode }) {
-  const [shops, setShops] = useState<Shop[]>(DEFAULT_SHOPS);
+  const [shops, setShops] = useState<Shop[]>([]);
   const [activeShopId, setActiveShopId] = useState<string>("pizza-world");
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
 
+  // Ref always holds the latest activeShopId without being a useCallback dep
+  const activeShopIdRef = React.useRef(activeShopId);
+  useEffect(() => {
+    activeShopIdRef.current = activeShopId;
+  }, [activeShopId]);
+
   // Fetch all shops directly from MySQL Database via API
+  // Stable callback: does not depend on activeShopId (uses ref instead)
   const refreshFromDb = useCallback(async () => {
     try {
       const res = await fetch("/api/shops");
@@ -45,7 +52,8 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
             (s: Shop, idx: number, self: Shop[]) => self.findIndex((t) => t.id === s.id) === idx
           );
           setShops(uniqueShops);
-          if (!uniqueShops.some((s: Shop) => s.id === activeShopId)) {
+          const currentId = activeShopIdRef.current;
+          if (!uniqueShops.some((s: Shop) => s.id === currentId)) {
             setActiveShopId(uniqueShops[0]?.id || "pizza-world");
           }
         }
@@ -55,7 +63,7 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoaded(true);
     }
-  }, [activeShopId]);
+  }, []); // stable — no deps; activeShopId is read via ref
 
   useEffect(() => {
     refreshFromDb();

@@ -52,7 +52,9 @@ export function Food4DInteractiveCanvas({ item, onInspect }: Food4DInteractiveCa
       width = canvas.width = canvas.offsetWidth || 300;
       height = canvas.height = canvas.offsetHeight || 200;
     };
-    window.addEventListener("resize", handleResize);
+    // ResizeObserver: fires only when this canvas changes size (not on every window resize)
+    const resizeObserver = new ResizeObserver(handleResize);
+    resizeObserver.observe(canvas);
 
     const spawnParticle = () => {
       if (particlesRef.current.length > 25) return;
@@ -141,7 +143,7 @@ export function Food4DInteractiveCanvas({ item, onInspect }: Food4DInteractiveCa
     loop();
 
     return () => {
-      window.removeEventListener("resize", handleResize);
+      resizeObserver.disconnect();
       if (animFrameRef.current) {
         cancelAnimationFrame(animFrameRef.current);
       }

@@ -2,13 +2,12 @@ import type { Metadata, Viewport } from "next";
 import { Cinzel, Inter } from "next/font/google";
 import "./globals.css";
 import { ShopProvider } from "@/context/shop-context";
-import { MenuProvider } from "@/context/menu-context";
 
 const cinzel = Cinzel({
   subsets: ["latin"],
   variable: "--font-heading",
   display: "swap",
-  weight: ["500", "600", "700", "800", "900"],
+  weight: ["700", "800"], // Only weights used in the app; trimmed from 5 to reduce font payload
 });
 
 const inter = Inter({
@@ -44,10 +43,8 @@ export default function RootLayout({
     >
       <body className="bg-[#03140c] text-[#fef2f2] min-h-screen antialiased selection:bg-emerald-600 selection:text-white">
         <ShopProvider>
-          <MenuProvider>
             <main className="min-h-screen">{children}</main>
-          </MenuProvider>
-        </ShopProvider>
+          </ShopProvider>
       </body>
     </html>
   );

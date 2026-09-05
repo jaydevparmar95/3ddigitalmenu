@@ -5,12 +5,27 @@ import Link from "next/link";
 import { useShop } from "@/context/shop-context";
 import { Shop, ShopMenuItem } from "@/types/shop";
 import { ItemTable } from "@/components/admin/item-table";
-import { ItemFormModal } from "@/components/admin/item-form";
-import { QrModal } from "@/components/admin/qr-modal";
-import { RegisterShopModal } from "@/components/admin/register-shop-modal";
-import { EditShopModal } from "@/components/admin/edit-shop-modal";
 import { AdminLogin } from "@/components/admin/admin-login";
 import { Input } from "@/components/ui/input";
+import dynamic from "next/dynamic";
+
+// Lazy-load modals: only bundled when opened, not on initial page load
+const ItemFormModal = dynamic(
+  () => import("@/components/admin/item-form").then((m) => ({ default: m.ItemFormModal })),
+  { ssr: false }
+);
+const QrModal = dynamic(
+  () => import("@/components/admin/qr-modal").then((m) => ({ default: m.QrModal })),
+  { ssr: false }
+);
+const RegisterShopModal = dynamic(
+  () => import("@/components/admin/register-shop-modal").then((m) => ({ default: m.RegisterShopModal })),
+  { ssr: false }
+);
+const EditShopModal = dynamic(
+  () => import("@/components/admin/edit-shop-modal").then((m) => ({ default: m.EditShopModal })),
+  { ssr: false }
+);
 import {
   Store,
   QrCode,

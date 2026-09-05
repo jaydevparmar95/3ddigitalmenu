@@ -30,16 +30,19 @@ export function MenuGridView({ shop }: MenuGridViewProps) {
   const [showScrollTop, setShowScrollTop] = useState<boolean>(false);
   const [inspectedItem, setInspectedItem] = useState<ShopMenuItem | null>(null);
 
-  // Monitor scroll for Back to Top button
+  // Monitor scroll for Back to Top button (throttled to 100ms)
   useEffect(() => {
+    let ticking = false;
     const handleScroll = () => {
-      if (window.scrollY > 300) {
-        setShowScrollTop(true);
-      } else {
-        setShowScrollTop(false);
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(() => {
+          setShowScrollTop(window.scrollY > 300);
+          ticking = false;
+        });
       }
     };
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 

@@ -3,7 +3,8 @@ import { getAllShopsFromDb } from "@/lib/db";
 import { DEFAULT_SHOPS } from "@/data/default-shops";
 import { PublicShopDirectory } from "@/components/public/public-shop-directory";
 
-export const dynamic = "force-dynamic";
+// Revalidate every 30 seconds (ISR) \u2014 avoids a full DB query on every request
+export const revalidate = 30;
 
 export default async function HomePage() {
   let shops = DEFAULT_SHOPS;

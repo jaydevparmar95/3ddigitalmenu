@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { recordUniqueShopVisitorInDb, getShopFromDb } from "@/lib/db";
+import { recordUniqueShopVisitorInDb, getDbPool, ensureDatabaseAndTables } from "@/lib/db";
+import mysql from "mysql2/promise";
 
 export async function POST(
   request: NextRequest,
@@ -71,11 +72,17 @@ export async function GET(
 ) {
   try {
     const { shopId } = await params;
-    const shop = await getShopFromDb(shopId);
+    // Direct targeted query — no need to load full shop + all items + all categories
+    await ensureDatabaseAndTables();
+    const db = getDbPool();
+    const [rows] = await db.query<mysql.RowDataPacket[]>(
+      "SELECT `visitors_count` FROM `shops` WHERE `id` = ? LIMIT 1",
+      [shopId]
+    );
     return NextResponse.json({
       success: true,
       shopId,
-      visitorsCount: shop?.visitorsCount || 0,
+      visitorsCount: Number(rows[0]?.visitors_count || 0),
     });
   } catch (error: any) {
     return NextResponse.json(

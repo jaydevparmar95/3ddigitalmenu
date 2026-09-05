@@ -157,36 +157,40 @@ async function insertFullShop(shop: Shop) {
     ]
   );
 
-  // Insert categories
-  for (let i = 0; i < shop.categories.length; i++) {
-    const cat = shop.categories[i];
+  // Batch INSERT categories (one round-trip instead of N)
+  if (shop.categories.length > 0) {
+    const catPlaceholders = shop.categories.map(() => "(?, ?, ?, ?, ?)").join(", ");
+    const catValues: any[] = [];
+    shop.categories.forEach((cat, i) => {
+      catValues.push(cat.id, shop.id, cat.name, cat.description || "", i);
+    });
     await db.query(
       `INSERT INTO \`categories\` (\`id\`, \`shop_id\`, \`name\`, \`description\`, \`order_index\`)
-       VALUES (?, ?, ?, ?, ?)
+       VALUES ${catPlaceholders}
        ON DUPLICATE KEY UPDATE \`name\` = VALUES(\`name\`)`,
-      [cat.id, shop.id, cat.name, cat.description || "", i]
+      catValues
     );
   }
 
-  // Insert items
-  for (const item of shop.items) {
-    await db.query(
-      `INSERT INTO \`menu_items\` (\`id\`, \`shop_id\`, \`name\`, \`description\`, \`price\`, \`category_id\`, \`image\`, \`is_veg\`, \`is_bestseller\`, \`is_spicy\`, \`is_chef_special\`)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-       ON DUPLICATE KEY UPDATE \`name\` = VALUES(\`name\`), \`price\` = VALUES(\`price\`)`,
-      [
-        item.id,
-        shop.id,
-        item.name,
-        item.description,
-        item.price,
-        item.category,
-        item.image,
+  // Batch INSERT items (one round-trip instead of N)
+  if (shop.items.length > 0) {
+    const itemPlaceholders = shop.items.map(() => "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").join(", ");
+    const itemValues: any[] = [];
+    for (const item of shop.items) {
+      itemValues.push(
+        item.id, shop.id, item.name, item.description, item.price,
+        item.category, item.image,
         item.isVeg ? 1 : 0,
         item.isBestseller ? 1 : 0,
         item.isSpicy ? 1 : 0,
         item.isChefSpecial ? 1 : 0,
-      ]
+      );
+    }
+    await db.query(
+      `INSERT INTO \`menu_items\` (\`id\`, \`shop_id\`, \`name\`, \`description\`, \`price\`, \`category_id\`, \`image\`, \`is_veg\`, \`is_bestseller\`, \`is_spicy\`, \`is_chef_special\`)
+       VALUES ${itemPlaceholders}
+       ON DUPLICATE KEY UPDATE \`name\` = VALUES(\`name\`), \`price\` = VALUES(\`price\`)`,
+      itemValues
     );
   }
 }
@@ -257,10 +261,68 @@ export async function getAllShopsFromDb(): Promise<Shop[]> {
   });
 }
 
-// 2. Get single shop by ID
+// 2. Get single shop by ID — direct targeted queries (no full table scan)
 export async function getShopFromDb(shopId: string): Promise<Shop | null> {
-  const allShops = await getAllShopsFromDb();
-  return allShops.find((s) => s.id === shopId) || null;
+  await ensureDatabaseAndTables();
+  const db = getDbPool();
+
+  const [shopRows] = await db.query<mysql.RowDataPacket[]>(
+    "SELECT * FROM `shops` WHERE `id` = ? LIMIT 1",
+    [shopId]
+  );
+  if (!shopRows || shopRows.length === 0) return null;
+
+  const s = shopRows[0];
+
+  const [catRows] = await db.query<mysql.RowDataPacket[]>(
+    "SELECT * FROM `categories` WHERE `shop_id` = ? ORDER BY `order_index` ASC",
+    [shopId]
+  );
+
+  const [itemRows] = await db.query<mysql.RowDataPacket[]>(
+    "SELECT * FROM `menu_items` WHERE `shop_id` = ? ORDER BY `created_at` DESC",
+    [shopId]
+  );
+
+  let features: string[] = [];
+  try {
+    features = typeof s.features === "string" ? JSON.parse(s.features) : s.features || [];
+  } catch {
+    features = [];
+  }
+
+  return {
+    id: s.id,
+    name: s.name,
+    tagline: s.tagline,
+    ownerName: s.owner_name || "",
+    phone: s.phone,
+    timings: s.timings,
+    establishedYear: s.established_year || "2021",
+    cuisineType: s.cuisine_type,
+    theme: s.theme || "emerald",
+    features,
+    categories: (catRows as mysql.RowDataPacket[]).map((c) => ({
+      id: c.id,
+      name: c.name,
+      description: c.description || "",
+    })),
+    items: (itemRows as mysql.RowDataPacket[]).map((i) => ({
+      id: i.id,
+      name: i.name,
+      description: i.description || "",
+      price: Number(i.price),
+      category: i.category_id,
+      image: i.image || "",
+      isVeg: Boolean(i.is_veg),
+      isBestseller: Boolean(i.is_bestseller),
+      isSpicy: Boolean(i.is_spicy),
+      isChefSpecial: Boolean(i.is_chef_special),
+    })),
+    createdAt: s.created_at ? new Date(s.created_at).toISOString() : new Date().toISOString(),
+    isDeleted: Boolean(s.is_deleted),
+    visitorsCount: Number(s.visitors_count || 0),
+  };
 }
 
 // 3. Create a new shop in MySQL
@@ -344,12 +406,10 @@ export async function recordUniqueShopVisitorInDb(
   const isNewVisitor = insertResult.affectedRows > 0;
 
   if (isNewVisitor) {
-    // Update live cache count in shops table
+    // Atomic increment — one query, no correlated subquery scan
     await db.query(
-      `UPDATE \`shops\` SET \`visitors_count\` = (
-        SELECT COUNT(*) FROM \`shop_visitors\` WHERE \`shop_id\` = ?
-      ) WHERE \`id\` = ?`,
-      [shopId, shopId]
+      "UPDATE `shops` SET `visitors_count` = `visitors_count` + 1 WHERE `id` = ?",
+      [shopId]
     );
   }
 

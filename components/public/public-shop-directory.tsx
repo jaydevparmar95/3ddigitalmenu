@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Shop } from "@/types/shop";
 import {
   Store,
@@ -197,15 +198,13 @@ export function PublicShopDirectory({ initialShops }: PublicShopDirectoryProps) 
                 >
                   {/* Card Header Media */}
                   <div className="relative aspect-[16/9] w-full bg-stone-950 overflow-hidden">
-                    <img
+                    <Image
                       src={coverImage}
                       alt={shop.name}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                      loading="lazy"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src =
-                          "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80";
-                      }}
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      className="object-cover transition-transform duration-700 group-hover:scale-105"
+                      priority={paginatedShops.indexOf(shop) < 3}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#0a0402] via-[#0a0402]/40 to-transparent" />
 
