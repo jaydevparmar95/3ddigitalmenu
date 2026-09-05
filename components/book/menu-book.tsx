@@ -313,9 +313,10 @@ export function MenuBook({ shopId }: { shopId?: string }) {
             </div>
           </div>
 
-          {/* 3D Book Stage - Enlarged on Mobile to fully utilize top & bottom vertical space */}
-          <div className="flex-1 flex items-center justify-center my-auto w-full max-w-full sm:max-w-5xl mx-auto overflow-hidden px-1 sm:px-2">
-            <div className="relative flex items-center justify-center w-full max-w-full">
+          {/* 3D Book Stage — min-h-0 is critical: prevents flex-1 from overflowing its container on mobile */}
+          <div className="flex-1 min-h-0 flex items-center justify-center w-full max-w-full sm:max-w-5xl mx-auto overflow-hidden px-1 sm:px-2">
+            {/* isolate: establishes a new stacking context so book shadows don't bleed over header/controls */}
+            <div className="isolate relative flex items-center justify-center w-full max-w-full">
               <div className="book-wrapper-shadow rounded-2xl max-w-full">
                 {/* HTMLFlipBook Component with Robust Mobile Folding & Gestures */}
                 <HTMLFlipBook
@@ -372,8 +373,8 @@ export function MenuBook({ shopId }: { shopId?: string }) {
             </div>
           </div>
 
-          {/* Catchy Bottom Book Controls */}
-          <div className="shrink-0 pb-3 sm:pb-1 w-full max-w-full px-2 sm:px-4">
+          {/* Catchy Bottom Book Controls — z-20 keeps controls above book shadow bleed */}
+          <div className="shrink-0 relative z-20 pb-2 sm:pb-1 w-full max-w-full px-2 sm:px-4">
             <BookControls
               currentPage={currentPage}
               totalPages={totalPages}
